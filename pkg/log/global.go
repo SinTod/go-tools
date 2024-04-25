@@ -17,10 +17,6 @@ type loggerAppliance struct {
 	Logger
 }
 
-func init() {
-	global.SetLogger(DefaultLogger)
-}
-
 func (a *loggerAppliance) SetLogger(in Logger) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
