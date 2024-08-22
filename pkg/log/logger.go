@@ -99,6 +99,56 @@ func NewZapLogger(encoder zapcore.EncoderConfig, level zap.AtomicLevel, logPath 
 	return &ZapLogger{log: zapLogger, Sync: zapLogger.Sync}
 }
 
+func NewZapLoggerStdout(encoder zapcore.EncoderConfig, level zap.AtomicLevel, opts ...zap.Option) *ZapLogger {
+
+	//writeSyncer, l := getLogWriter(LevelInfo, logPath)
+	//errWriteSyncer, lErr := getLogWriter(LevelError, logPath)
+	////启动定时任务 切割
+	//c := cron.New(cron.WithSeconds())
+	//spec := "0 0 0 * * ?" //每天凌晨执行
+	////spec := "*/3 * * * * ?" //每三秒执行一次
+	//c.AddFunc(spec, func() {
+	//	l.Rotate()
+	//	lErr.Rotate()
+	//})
+	//c.Start()
+
+	encConsole := zapcore.NewConsoleEncoder(encoder)
+	//
+	//encFile := zapcore.NewJSONEncoder(encoder)
+
+	// 设置 console 默认日志
+	coreConsole := zapcore.NewCore(
+		encConsole,
+		zapcore.NewMultiWriteSyncer(
+			zapcore.AddSync(os.Stdout),
+		), level)
+	// 设置写文件日志
+	//coreFile := zapcore.NewCore(
+	//	encFile,
+	//	zapcore.NewMultiWriteSyncer(
+	//		zapcore.AddSync(writeSyncer),
+	//	), level)
+	//// 设置 zapcore 错误日志
+	//coreErr := zapcore.NewCore(
+	//	encFile,
+	//	zapcore.NewMultiWriteSyncer(
+	//		zapcore.AddSync(errWriteSyncer),
+	//	), zap.NewAtomicLevelAt(zapcore.ErrorLevel))
+	//  new 一个 *zap.Logger
+	//zapLogger := zap.New(core, opts...)
+	// 通过环境变量关闭格式化输出
+	var zapLogger *zap.Logger
+	//if os.Getenv("LOG_STDOUT_OFF") != "" {
+	//	zapLogger = zap.New(zapcore.NewTee(coreFile, coreErr), opts...)
+	//} else {
+	//	zapLogger = zap.New(zapcore.NewTee(coreConsole, coreFile, coreErr), opts...)
+	//}
+	zapLogger = zap.New(zapcore.NewTee(coreConsole), opts...)
+
+	return &ZapLogger{log: zapLogger, Sync: zapLogger.Sync}
+}
+
 // Log 方法实现了 kratos/log/log.go 中的 Logger interface
 func (l *ZapLogger) Log(level Level, keyvals ...interface{}) error {
 	if len(keyvals) == 0 || len(keyvals)%2 != 0 {
@@ -171,6 +221,34 @@ func NewLogger(logPath string) *ZapLogger {
 		encoder,
 		getLogLevel(),
 		logPath,
+		zap.AddStacktrace(
+			zap.NewAtomicLevelAt(zapcore.FatalLevel)),
+		//zap.AddCallerSkip(2),
+		//zap.AddCaller(),
+	)
+
+	return l
+}
+
+func NewLoggerStdout() *ZapLogger {
+	encoder := zapcore.EncoderConfig{
+		//TimeKey:  "t",
+		LevelKey: "log_level",
+
+		//NameKey:        "logger",
+		//CallerKey:      "caller",
+		//MessageKey:     "msg",
+		//StacktraceKey:  "stack",
+		//EncodeTime:  zapcore.ISO8601TimeEncoder,
+		LineEnding:  zapcore.DefaultLineEnding,
+		EncodeLevel: zapcore.CapitalLevelEncoder, //将级别转换成大写
+		//EncodeDuration: zapcore.SecondsDurationEncoder,
+		//EncodeCaller:   zapcore.FullCallerEncoder,
+	}
+
+	l := NewZapLoggerStdout(
+		encoder,
+		getLogLevel(),
 		zap.AddStacktrace(
 			zap.NewAtomicLevelAt(zapcore.FatalLevel)),
 		//zap.AddCallerSkip(2),

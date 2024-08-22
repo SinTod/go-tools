@@ -47,8 +47,8 @@ func (h *Helper) WithContext(ctx context.Context) *Helper {
 }
 
 // Log Print log by level and keyvals.
-func (h *Helper) Log(level Level, keyvals ...interface{}) {
-	_ = h.logger.Log(level, keyvals...)
+func (h *Helper) Log(level Level, keyvals ...interface{}) error {
+	return h.logger.Log(level, keyvals...)
 }
 
 // Debug logs a message at debug level.

@@ -8,7 +8,12 @@ import (
 )
 
 // globalLogger is designed as a global logger in current process.
-var global = &loggerAppliance{}
+var global = &loggerAppliance{
+	Logger: NewHelper(With(NewLoggerStdout(),
+		"timestamp", DefaultTimestamp,
+		"caller", Caller(5),
+	)),
+}
 
 // loggerAppliance is the proxy of `Logger` to
 // make logger change will affect all sub-logger.
